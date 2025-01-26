@@ -12,13 +12,27 @@
         <h2><a href="/">App</a></h2>
         <nav>
             <a href="/login">Login</a>
-            <a href="/register">Register</a>
         </nav>
     </header>
 
     <main>
-        <h3>Homepage</h3>
-        <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Tenetur praesentium illo perferendis rem qui ullam facilis neque sint voluptatem. Beatae officiis perspiciatis illum, ratione neque impedit maiores reprehenderit aspernatur maxime.</p>
+        <form action="/register" method="POST">
+            <% errors.forEach(error => { %>
+                <p class="notice"><%= error %></p>
+            <% }) %>
+            <fieldset>
+                <legend>Crie sua conta:</legend>
+                <label for="username"><small>Usuário</small></label>
+                <input type="text" id="username" name="username" autocomplete="off">
+    
+                <label for="password"><small>Senha</small></label>
+                <input type="password" id="password" name="password" autocomplete="off">
+    
+                <br>
+                <button>Registrar</button>
+    
+            </fieldset>
+        </form>
     </main>
 
     <footer>
