@@ -1,4 +1,7 @@
-const bcrypt = require("bcrypt")
+require("dotenv").config()
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser")
 const express = require("express");
 const db = require("better-sqlite3")("ourApp.db")
 db.pragma("journal_mode = WAL")
@@ -19,19 +22,40 @@ const app = express();
 app.set("view engine", "ejs");
 app.use(express.urlencoded({extended: false}))
 app.use(express.static("public"));
+app.use(cookieParser())
 
 app.use(function (req, res, next) {
     res.locals.errors = []
+
+    try {
+        const decoded = jwt.verify(req.cookies.ourSimpleApp, process.env.JWTSECRET)
+        req.user = decoded
+    } catch(err) {
+        req.user = false
+    }
+
+    res.locals.user = req.user
+    console.log(req.user);
+
     next()
 })
 
 app.get("/", (req, res) => {
+    if(req.user)
+    {
+        return res.render("dashboard")
+    } 
     res.render("homepage");
 
 })
 
 app.get("/login", (req, res) => {
     res.render("login")
+})
+
+app.get("/logout", (req, res) => {
+    res.clearCookie("ourSimpleApp")
+    res.redirect("/")
 })
 
 app.post("/register", (req, res) => {
@@ -57,9 +81,14 @@ app.post("/register", (req, res) => {
     req.body.password = bcrypt.hashSync(req.body.password, salt)
 
     const ourStatement = db.prepare("INSERT INTO users (username, password) VALUES (?, ?)")
-    ourStatement.run(req.body.username, req.body.password)
+    const result = ourStatement.run(req.body.username, req.body.password)
 
-    res.cookie("ourSimpleApp", "supertopsecretvalue", {
+    const lookupStatement = db.prepare("SELECT * FROM users WHERE ROWID = ?");
+    const ourUser = lookupStatement.get(result.lastInsertRowid)
+
+    const ourTokenValue = jwt.sign({exp: Math.floor(Date.now() / 1000 + 60 * 60 * 24),userid: ourUser.id, username: ourUser.username}, process.env.JWTSECRET)
+
+    res.cookie("ourSimpleApp", ourTokenValue, {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
