@@ -1,28 +1,33 @@
-
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-    <header>
-        <h2><a href="/">App</a></h2>
-        <nav>
-            <a href="/login">Login</a>
-        </nav>
-    </header>
+  <%- include('includes/head') %>
+  <body>
+    <%- include('includes/header') %>
 
     <main>
-        <h3>Login</h3>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestiae voluptatem eaque eum eos fugit saepe ex reprehenderit, labore dolore nisi non consectetur ut corporis nulla dolorum sequi fuga rem natus!</p>
+      <form action="/login" method="POST">
+        <% errors.forEach(error => { %>
+        <p class="notice"><%= error %></p>
+        <% }) %>
+        <fieldset>
+          <legend>Acesse sua conta:</legend>
+          <label for="username"><small>Usuário</small></label>
+          <input type="text" id="username" name="username" autocomplete="off" />
+
+          <label for="password"><small>Senha</small></label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="off"
+          />
+
+          <br />
+          <button>Log In</button>
+        </fieldset>
+      </form>
     </main>
 
-    <footer>
-        <small>&copy; App</small>
-    </footer>
-    
-</body>
+    <%- include('includes/footer') %>
+  </body>
 </html>
