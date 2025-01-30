@@ -1,11 +1,14 @@
+// Requirements and importing packages needed for the project
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const sanitizeHTML = require("sanitize-html");
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
 const express = require("express");
 const db = require("better-sqlite3")("ourApp.db");
 db.pragma("journal_mode = WAL");
 
+// Create table of users/passwords in database.
 const createTables = db.transaction(() => {
   db.prepare(
     `
@@ -16,9 +19,23 @@ const createTables = db.transaction(() => {
         )
         `
   ).run();
+
+  db.prepare(
+    `
+      CREATE TABLE IF NOT EXISTS posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      createdDate TEXT,
+      title STRING NOT NULL,
+      body TEXT NOT NULL,
+      authorid INTEGER,
+      FOREIGN KEY (authorid) REFERENCES users(id)
+      )
+      `
+  ).run();
 });
 createTables();
 
+// basic code to start server
 const app = express();
 
 app.set("view engine", "ejs");
@@ -26,6 +43,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
+// Creates cookies if needed to store information of login
 app.use(function (req, res, next) {
   res.locals.errors = [];
 
@@ -42,6 +60,7 @@ app.use(function (req, res, next) {
   next();
 });
 
+// first thing that renders when entering the site
 app.get("/", (req, res) => {
   if (req.user) {
     return res.render("dashboard");
@@ -49,21 +68,25 @@ app.get("/", (req, res) => {
   res.render("homepage");
 });
 
+// render login page
 app.get("/login", (req, res) => {
   res.render("login");
 });
 
+// when logout, removes the cookie which stores info on the users logged and redirects to homepage
 app.get("/logout", (req, res) => {
   res.clearCookie("ourSimpleApp");
   res.redirect("/");
 });
 
+// validates and sends login form info to the databse
 app.post("/login", (req, res) => {
   let errors = [];
-
+  // text on username/password field is not a string, transform it to a empty string.
   if (typeof req.body.username !== "string") req.body.username = "";
   if (typeof req.body.password !== "string") req.body.password = "";
 
+  // check if it's empty
   if (req.body.username.trim() == "") errors = ["Invalid username / password."];
   if (req.body.password == "") errors = ["Invalid username / password."];
 
@@ -71,6 +94,7 @@ app.post("/login", (req, res) => {
     return res.render("login", { errors });
   }
 
+  // checks if username exists in database
   const userInQuestionStatement = db.prepare(
     "SELECT * FROM users WHERE USERNAME = ?"
   );
@@ -81,6 +105,7 @@ app.post("/login", (req, res) => {
     return res.render("login", { errors });
   }
 
+  // decrypts password in database using bcrypt package and checks if matches with user input
   const matchOrNot = bcrypt.compareSync(
     req.body.password,
     userInQuestion.password
@@ -90,6 +115,7 @@ app.post("/login", (req, res) => {
     return res.render("login", { errors });
   }
 
+  // if matches, creates a cookie to store that user is logged in
   const ourTokenValue = jwt.sign(
     {
       exp: Math.floor(Date.now() / 1000 + 60 * 60 * 24),
@@ -109,8 +135,49 @@ app.post("/login", (req, res) => {
   res.redirect("/");
 });
 
-app.get("/create-post", (req, res) => {
-  res.render("/create-post");
+// redirects user to initial page if he tries to acess must-login pages
+function mustBeLoggedIn(req, res, next) {
+  if (req.user) {
+    return next();
+  }
+  return res.redirect("/");
+}
+
+app.get("/create-post", mustBeLoggedIn, (req, res) => {
+  res.render("create-post");
+});
+
+function sharedPostValidation(req) {
+  const errors = [];
+
+  if (typeof req.body.title !== "string") req.body.title = "";
+  if (typeof req.body.body !== "string") req.body.body = "";
+
+  req,
+    (body.title = sanitizeHTML(req.body.title.trim(), {
+      allowedTags: [],
+      allowedAttributes: {},
+    }));
+  req,
+    (body.body = sanitizeHTML(req.body.body.trim(), {
+      allowedTags: [],
+      allowedAttributes: {},
+    }));
+
+  if (!req.body.tile) errors.push("You must provide a title.");
+  if (!req.body.body) errors.push("You must provide content.");
+
+  return errors;
+}
+
+app.post("/create-post", (req, res) => {
+  const errors = sharedPostValidation(req);
+
+  if (errors.length) {
+    return res.render("create-post", { errors });
+  }
+
+  // save post in database
 });
 
 app.post("/register", (req, res) => {
