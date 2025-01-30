@@ -162,6 +162,17 @@ function sharedPostValidation(req) {
   return errors;
 }
 
+app.get("/post/:id", (req, res) => {
+  const statement = db.prepare("SELECT posts.*, users.username FROM posts INNER JOIN users ON posts.authorid = users.id WHERE posts.id = ?");
+  const post = statement.get(req.params.id)
+
+  if (!post) {
+    return res.redirect("/")
+  }
+
+  res.render ("single-post", {post})
+})
+
 app.post("/create-post", mustBeLoggedIn, (req, res) => {
   const errors = sharedPostValidation(req);
 
