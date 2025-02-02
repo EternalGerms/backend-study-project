@@ -63,7 +63,9 @@ app.use(function (req, res, next) {
 // first thing that renders when entering the site
 app.get("/", (req, res) => {
   if (req.user) {
-    return res.render("dashboard");
+    const postsStatement = db.prepare("SELECT * FROM posts WHERE authorid = ?")
+    const posts = postsStatement.all(req.user.userid)
+    return res.render("dashboard", {posts});
   }
   res.render("homepage");
 });
@@ -161,6 +163,72 @@ function sharedPostValidation(req) {
 
   return errors;
 }
+
+app.get("/edit-post/:id",mustBeLoggedIn, (req, res) => {
+  // look up to the post in question
+  const statement = db.prepare("SELECT * FROM posts WHERE id = ?")
+  const post = statement.get(req.params.id)
+ 
+  if (!post) {
+    return res.redirect("/")
+  }
+
+  // if user isn't the actor, redirect to homepage
+  if (post.authorid !== req.user.userid) {
+    return res.redirect("/")
+  }
+
+  // if it's, render the edit post template
+  res.render("edit-post", {post})
+})
+
+app.post("/edit-post/:id", mustBeLoggedIn, (req, res) => {
+  // look up to the post in question
+  const statement = db.prepare("SELECT * FROM posts WHERE id = ?")
+  const post = statement.get(req.params.id)
+ 
+  if (!post) {
+    return res.redirect("/")
+  }
+
+  // if user isn't the actor, redirect to homepage
+  if (post.authorid !== req.user.userid) {
+    return res.redirect("/")
+  }
+
+  const errors = sharedPostValidation(req)
+
+  if (errors.length) {
+    return res.render("edit-post", {errors})
+  }
+
+  const updateStatement = db.prepare("UPDATE posts SET title = ?, body = ? WHERE id = ?")
+  updateStatement.run(req.body.title, req.body.body, req.params.id)
+
+  res.redirect(`/post/${req.params.id}`)
+
+})
+
+app.post("/delete-post/:id", mustBeLoggedIn, (req,res) => {
+    // look up to the post in question
+    const statement = db.prepare("SELECT * FROM posts WHERE id = ?")
+    const post = statement.get(req.params.id)
+   
+    if (!post) {
+      return res.redirect("/")
+    }
+  
+    // if user isn't the actor, redirect to homepage
+    if (post.authorid !== req.user.userid) {
+      return res.redirect("/")
+    }
+
+    const deleteStatement = db.prepare("DELETE FROM posts WHERE id = ?")
+    deleteStatement.run(req.params.id)
+
+    res.redirect("/")
+
+})
 
 app.get("/post/:id", (req, res) => {
   const statement = db.prepare("SELECT posts.*, users.username FROM posts INNER JOIN users ON posts.authorid = users.id WHERE posts.id = ?");
