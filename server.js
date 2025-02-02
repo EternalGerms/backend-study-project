@@ -63,6 +63,7 @@ app.use(function (req, res, next) {
 // first thing that renders when entering the site
 app.get("/", (req, res) => {
   if (req.user) {
+    // render user-made posts
     const postsStatement = db.prepare("SELECT * FROM posts WHERE authorid = ?")
     const posts = postsStatement.all(req.user.userid)
     return res.render("dashboard", {posts});
