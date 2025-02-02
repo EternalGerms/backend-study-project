@@ -178,6 +178,8 @@ app.get("/edit-post/:id",mustBeLoggedIn, (req, res) => {
     return res.redirect("/")
   }
 
+  
+
   // if it's, render the edit post template
   res.render("edit-post", {post})
 })
@@ -237,8 +239,10 @@ app.get("/post/:id", (req, res) => {
   if (!post) {
     return res.redirect("/")
   }
+  
+  const isAuthor = post.authorid === req.user.userid
 
-  res.render ("single-post", {post})
+  res.render ("single-post", {post, isAuthor})
 })
 
 app.post("/create-post", mustBeLoggedIn, (req, res) => {
