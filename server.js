@@ -220,8 +220,10 @@ app.post("/edit-post/:id", mustBeLoggedIn, (req, res) => {
     return res.render("edit-post", {errors})
   }
 
-  const updateStatement = db.prepare("UPDATE posts SET title = ?, body = ? WHERE id = ?")
-  updateStatement.run(req.body.title, req.body.body, req.params.id)
+  let isPublic = req.body.isPublic ? "TRUE" : "FALSE";
+
+  const updateStatement = db.prepare("UPDATE posts SET title = ?, body = ?, isPublic = ? WHERE id = ?")
+  updateStatement.run(req.body.title, req.body.body, isPublic, req.params.id)
 
   res.redirect(`/post/${req.params.id}`)
 
@@ -250,7 +252,7 @@ app.post("/delete-post/:id", mustBeLoggedIn, (req,res) => {
 
 app.get("/post/:id", (req, res) => {
   const statement = db.prepare("SELECT posts.*, users.username FROM posts INNER JOIN users ON posts.authorid = users.id WHERE posts.id = ?");
-  const post = statement.get(req.params.id)
+  const post = statement.get(req.params.id) 
 
   if (!post) {
     return res.redirect("/")
@@ -268,16 +270,7 @@ app.post("/create-post", mustBeLoggedIn, (req, res) => {
     return res.render("create-post", { errors });
   }
 
-  let isPublic = req.body.isPublic;
-  if (isPublic)
-  {
-    isPublic = "TRUE"
-  }
-  else
-  {
-    isPublic = "FALSE"
-  }
-  console.log(isPublic);
+  let isPublic = req.body.isPublic ? "TRUE" : "FALSE";
 
   // save post in database
   const ourStatement = db.prepare("INSERT INTO posts (title, body, authorid, isPublic, createdDate) VALUES (?, ?, ?, ?, ?)")
