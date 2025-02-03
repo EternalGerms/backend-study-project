@@ -1,6 +1,7 @@
 // Requirements and importing packages needed for the project
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const marked = require("marked");
 const sanitizeHTML = require("sanitize-html");
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
@@ -45,6 +46,15 @@ app.use(cookieParser());
 
 // Creates cookies if needed to store information of login
 app.use(function (req, res, next) {
+  // activate markdown on posts
+  res.locals.filterUserHTML = function(content) {
+    return sanitizeHTML(marked.parse(content), {
+      allowedTags: ["p", "br", "ul", "li", "ol", "strong", "bold", "i", "em", "h1", "h2", "h3", "h4", "h5", "h6"],
+      allowedAttributes: {}
+    })
+  }
+
+
   res.locals.errors = [];
 
   try {
@@ -64,7 +74,7 @@ app.use(function (req, res, next) {
 app.get("/", (req, res) => {
   if (req.user) {
     // render user-made posts
-    const postsStatement = db.prepare("SELECT * FROM posts WHERE authorid = ?")
+    const postsStatement = db.prepare("SELECT * FROM posts WHERE authorid = ? ORDER BY createdDate DESCENDING")
     const posts = postsStatement.all(req.user.userid)
     return res.render("dashboard", {posts});
   }

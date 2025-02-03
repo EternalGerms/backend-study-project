@@ -10,7 +10,7 @@
         <small>Posted by <%= post.username %> on <%= new Date(post.createdDate).getMonth() + 1 %>/<%= new Date(post.createdDate).getDate()%>/<%= new Date(post.createdDate).getFullYear() %></small>
 
         <div>
-            <%= post.body %>
+            <%- filterUserHTML(post.body) %>
         </div>
       </article>
 
