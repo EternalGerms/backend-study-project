@@ -4,16 +4,18 @@
   <body>
     <%- include('includes/header') %>
     <main>
+      <p> Welcome! It looks like you don't have an account yet.</p> 
+      <p>Register below, or if you have an account, click on the “Login” button above.</p>
       <form action="/register" method="POST">
         <% errors.forEach(error => { %>
         <p class="notice"><%= error %></p>
         <% }) %>
         <fieldset>
-          <legend>Crie sua conta:</legend>
-          <label for="username"><small>Usuário</small></label>
+          <legend>Create an account:</legend>
+          <label for="username"><small>Username</small></label>
           <input type="text" id="username" name="username" autocomplete="off" />
 
-          <label for="password"><small>Senha</small></label>
+          <label for="password"><small>Password</small></label>
           <input
             type="password"
             id="password"
@@ -22,7 +24,7 @@
           />
 
           <br />
-          <button>Registrar</button>
+          <button>Register</button>
         </fieldset>
       </form>
     </main>

@@ -10,15 +10,17 @@
         <p class="notice"><%= error %></p>
         <% }) %>
         <fieldset>
-          <legend>Crie uma postagem:</legend>
-          <label for="title"><small>Título</small></label>
+          <legend>Create a post:</legend>
+          <label for="title"><small>Title</small></label>
           <input type="text" id="title" name="title" autocomplete="off" />
 
-          <label for="body"><small>Conteúdo</small></label>
+          <label for="body"><small>Content</small></label>
           <textarea name="body" id="body"></textarea>
 
           <br />
-          <button>Salvar postagem</button>
+          <input type="checkbox" id="isPublic" name="isPublic">Make post public
+          <br />
+          <button>Save post</button>
         </fieldset>
       </form>
     </main>

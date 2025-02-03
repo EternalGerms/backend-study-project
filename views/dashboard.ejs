@@ -6,16 +6,29 @@
 
     <main>
       <% if (posts.length == 0) { %>
-        <h4>Esses são seus posts, <%= user.username %>... tá meio vazio ainda né?</h4>
+        <h4>These are your posts, <%= user.username %>... It's still a bit empty, isn't it?</h4>
 
       <% } else { %>
-        <h4>Esses são seus posts, <%= user.username %></h4>
+        <h4>Welcome, <%= user.username %>, these are your posts:</h4>
       <% } %>
       
       
       <ul>
         <% posts.forEach(post => { %>
           <li><a href="/post/<%= post.id %>"><%= post.title %></a> on <%= new Date(post.createdDate).getMonth() + 1 %>/<%= new Date(post.createdDate).getDate()%>/<%= new Date(post.createdDate).getFullYear() %></li>
+      <%}) %>
+      </ul>
+      <% console.log(publicPosts) %>
+      <% if (publicPosts.length == 0) { %>
+        <h4>There are no other posts in the community... Call a friend to join!</h4>
+
+      <% } else { %>
+        <h4>Check out posts from the community!</h4>
+      <% } %>
+
+      <ul>
+        <% publicPosts.forEach(publicPost => { %>
+          <li><a href="/post/<%= publicPost.id %>"><%= publicPost.title %></a> on <%= new Date(publicPost.createdDate).getMonth() + 1 %>/<%= new Date(publicPost.createdDate).getDate()%>/<%= new Date(publicPost.createdDate).getFullYear()%></li>
       <%}) %>
       </ul>
 

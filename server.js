@@ -28,6 +28,7 @@ const createTables = db.transaction(() => {
       createdDate TEXT,
       title STRING NOT NULL,
       body TEXT NOT NULL,
+      isPublic TEXT,
       authorid INTEGER,
       FOREIGN KEY (authorid) REFERENCES users(id)
       )
@@ -74,9 +75,13 @@ app.use(function (req, res, next) {
 app.get("/", (req, res) => {
   if (req.user) {
     // render user-made posts
-    const postsStatement = db.prepare("SELECT * FROM posts WHERE authorid = ? ORDER BY createdDate DESCENDING")
+    const postsStatement = db.prepare("SELECT * FROM posts WHERE authorid = ? ORDER BY createdDate DESC")
     const posts = postsStatement.all(req.user.userid)
-    return res.render("dashboard", {posts});
+
+    const publicPostsStatement = db.prepare("SELECT * FROM posts WHERE isPublic = ? AND authorid != ? ORDER BY createdDate DESC")
+    const publicPosts = publicPostsStatement.all("TRUE", req.user.userid)
+    return res.render("dashboard", {posts, publicPosts});
+
   }
   res.render("homepage");
 });
@@ -263,9 +268,20 @@ app.post("/create-post", mustBeLoggedIn, (req, res) => {
     return res.render("create-post", { errors });
   }
 
+  let isPublic = req.body.isPublic;
+  if (isPublic)
+  {
+    isPublic = "TRUE"
+  }
+  else
+  {
+    isPublic = "FALSE"
+  }
+  console.log(isPublic);
+
   // save post in database
-  const ourStatement = db.prepare("INSERT INTO posts (title, body, authorid, createdDate) VALUES (?, ?, ?, ?)")
-  const result = ourStatement.run(req.body.title, req.body.body, req.user.userid, new Date().toISOString())
+  const ourStatement = db.prepare("INSERT INTO posts (title, body, authorid, isPublic, createdDate) VALUES (?, ?, ?, ?, ?)")
+  const result = ourStatement.run(req.body.title, req.body.body, req.user.userid,isPublic, new Date().toISOString());
 
   const getPostStatement = db.prepare("SELECT * FROM posts WHERE ROWID = ?")
   const realPost = getPostStatement.get(result.lastInsertRowid)
