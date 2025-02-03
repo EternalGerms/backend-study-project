@@ -66,7 +66,6 @@ app.use(function (req, res, next) {
   }
 
   res.locals.user = req.user;
-  console.log(req.user);
 
   next();
 });
@@ -78,6 +77,7 @@ app.get("/", (req, res) => {
     const postsStatement = db.prepare("SELECT * FROM posts WHERE authorid = ? ORDER BY createdDate DESC")
     const posts = postsStatement.all(req.user.userid)
 
+    // render public-marked posts
     const publicPostsStatement = db.prepare("SELECT * FROM posts WHERE isPublic = ? AND authorid != ? ORDER BY createdDate DESC")
     const publicPosts = publicPostsStatement.all("TRUE", req.user.userid)
     return res.render("dashboard", {posts, publicPosts});
@@ -259,6 +259,10 @@ app.get("/post/:id", (req, res) => {
   }
   
   const isAuthor = post.authorid === req.user.userid
+  if(!isAuthor && post.isPublic == "FALSE")
+  {
+    return res.redirect("/")
+  }
 
   res.render ("single-post", {post, isAuthor})
 })

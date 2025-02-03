@@ -12,6 +12,12 @@
         <div>
             <%- filterUserHTML(post.body) %>
         </div>
+        <% if (post.isPublic == "TRUE") { %>
+          <small>Public post</small>
+          <%} else {%>
+          <small>Private post</small>
+          <%} %>
+        
       </article>
 
       <% if (isAuthor) { %>
